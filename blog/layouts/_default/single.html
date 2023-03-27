@@ -1,0 +1,9 @@
+{{ define "main" }}
+<article class="single-post">
+    <h1>{{ .Title }}</h1>
+    <div class="post-meta">
+        <span class="post-date"><p class="subtitle">{{ .Date.Format "January 2, 2006" }}</p></span>
+    </div>
+    <section>{{ .Content }}</section>
+</article>
+{{ end }}

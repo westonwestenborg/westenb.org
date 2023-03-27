@@ -1,0 +1,6 @@
+baseURL = 'http://westenb.org/'
+languageCode = 'en-us'
+title = 'Weston Westenborg'
+
+[params]
+dateFormat = "Jan 2, 2006"

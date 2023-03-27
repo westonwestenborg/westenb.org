@@ -2,41 +2,75 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ .Title }}</title>
-    <link rel="stylesheet" href="/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/css/main.css">
-    <link rel="stylesheet" href="/css/tufte.min.css">
-</head>
-<body>
-    <header id="site-header">
-        <nav class="navbar navbar-expand-lg bg-body-tertiary">
-            <div class="container-fluid">
-              <a class="navbar-brand" href="/">{{ .Site.Title }}</a>
-              <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-              </button>
-              <div class="collapse navbar-collapse justify-content-end" id="navbarNavAltMarkup">
-                <div class="navbar-nav">
-                  <a class="nav-link active" aria-current="page" href="/">Home</a>
-                  <a class="nav-link" href="/about/">About</a>
-                  <a class="nav-link" href="/posts/">Posts</a>
+    <title>{{ if .Title }}{{ .Title }} | {{ end }}{{ .Site.Title }}</title>
+    <link rel="stylesheet" href="{{ "css/tufte.css" | absURL }}">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+    
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            min-height: 100vh;
+        }
+    
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 1rem;
+        }
+    
+        @media screen and (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+    
+            .site-navigation {
+                margin-top: 1.2rem;
+                font-size: 1rem;
+            }
+        }
+    
+        main {
+            padding: 1rem;
+        }
+        .footer-content {
+            padding: 1rem;
+        }
+
+    </style>       
+    {{ block "head" . }}{{ end }}
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <div class="header-content">
+                    <nav class="site-navigation">
+                        <a href="{{ "/" | absURL }}">{{ .Site.Title }}</a>
+                    </nav>
+                    <nav class="site-navigation">
+                        <a href="{{ "about" | absURL }}">About</a>
+                    </nav>
                 </div>
-              </div>
+            </header>
+            <div class="content-wrapper">
+                <main>
+                    {{ block "main" . }}{{ end }}
+                </main>
             </div>
-          </nav>
-    </header>
-        <main class="site-main">
-            <div class="container">
-            {{ block "main" . }}{{ end }}
+            <footer>
+                <div class="footer-content">
+                    &copy; {{ now.Format "2006" }} {{ .Site.Title }}. All rights reserved.
+                </div>
+            </footer>
         </div>
-        </main>
-        <footer id="site-footer">
-            <div class="copyright text-center">
-                &copy; 2023 {{ .Site.Title }}
-            </div>
-        </footer>
-        <script src="/js/bootstrap.min.js"></script>
-</body>
-</html>
+        {{ block "scripts" . }}{{ end }}
+    </body>
+    </html>
