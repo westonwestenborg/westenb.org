@@ -1,6 +1,7 @@
 baseURL = 'http://westenb.org/'
 languageCode = 'en-us'
 title = 'Weston Westenborg'
+publishDir = "public"
 
 [params]
 dateFormat = "Jan 2, 2006"
