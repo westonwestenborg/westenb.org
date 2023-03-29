@@ -5,3 +5,6 @@ publishDir = "public"
 
 [params]
 dateFormat = "Jan 2, 2006"
+
+[markup.goldmark.renderer]
+unsafe = true
