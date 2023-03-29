@@ -6,6 +6,8 @@ author = "Weston Westenborg"
 tags = ["Mindfullness", "Meditation"]
 +++
 
+*This was a sample post I used to test when building the site*
+
 ## The Benefits of Meditation: Why You Should Start Today
 
 {{< newthought "Meditation has become an increasingly popular practice" >}} in recent years, and for good reason. Research has shown that meditation can have a positive impact on both the mind and body, and can be a valuable tool for managing stress and improving overall well-being. In this article, we'll explore some of the benefits of meditation and why you should consider adding this practice to your daily routine.

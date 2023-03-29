@@ -1,12 +1,15 @@
 {{ define "main" }}
     <h2>Posts</h2>
     <ul>
-        {{ range .Paginator.Pages.ByDate.Reverse }}
+        {{ range (.Paginator.Pages.ByDate.Reverse) }}
+        {{ if ne .RelPermalink "/about/" }}
         <li>
             <a href="{{ .Permalink }}">{{ .Title }}</a> - 
             <span class="post-date">{{ .Date.Format "January 2, 2006" }}</span>
         </li>
         {{ end }}
+        {{ end }}
     </ul>
     {{ template "_internal/pagination.html" . }}
 {{ end }}
+
