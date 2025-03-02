@@ -1,0 +1,39 @@
+title: westenb.org
+description: Personal website and blog
+url: https://westenb.org
+author: 
+  name: Weston Westenborg
+
+# Build settings
+markdown: kramdown
+permalink: /:year/:month/:day/:title/
+paginate: 15
+paginate_path: "/page:num/"
+
+# Collections
+collections:
+  pages:
+    output: true
+    permalink: /:path/
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+      type: "posts"
+    values:
+      layout: "post"
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "page"
+  - scope:
+      path: ""
+    values:
+      layout: "default"
+
+# Plugins
+plugins:
+  - jekyll-paginate
+  - jekyll-feed

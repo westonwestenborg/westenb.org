@@ -1,0 +1,24 @@
+{% comment %}
+This include generates all the individual tag pages (tag/tagname/index.html)
+{% endcomment %}
+
+{% for tag in site.tags %}
+  {% assign tag_name = tag[0] %}
+  {% assign tag_path = | append: '/tags/' | append: tag_name | slugify | append: '/index.html' %}
+  
+  {% comment %}
+  Check if the tag page already exists, if not, create it
+  Note: This check only works during a jekyll build, not in includes
+  {% endcomment %}
+  
+  {% capture tag_content %}---
+layout: tag
+title: "Tag: {{ tag_name }}"
+tag: {{ tag_name }}
+permalink: /tags/{{ tag_name | slugify }}/
+---{% endcapture %}
+  
+  {% comment %}
+  Jekyll will automatically create and render this file during build
+  {% endcomment %}
+{% endfor %}

@@ -1,0 +1,34 @@
+---
+layout: default
+title: Tags
+permalink: /tags/
+---
+
+<article class="tags-page">
+  <h1>Tags</h1>
+  
+  <div class="tags-cloud">
+    {% assign tags = site.tags | sort %}
+    {% for tag in tags %}
+      <a href="{{ '/tags/' | relative_url }}{{ tag[0] | slugify }}/" class="tag-cloud-item">
+        {{ tag[0] }} <span class="tag-count">({{ tag[1].size }})</span>
+      </a>
+    {% endfor %}
+  </div>
+  
+  <div class="tags-posts">
+    {% for tag in tags %}
+      <section class="tag-section">
+        <h2 id="{{ tag[0] | slugify }}" class="tag-heading">{{ tag[0] }}</h2>
+        <ul class="post-list">
+          {% for post in tag[1] %}
+            <li>
+              <span class="post-date">{{ post.date | date: "%B %-d, %Y" }}</span>
+              <a href="{{ post.url | relative_url }}" class="post-link">{{ post.title }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endfor %}
+  </div>
+</article>

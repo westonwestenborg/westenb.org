@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if page.title %}{{ page.title }} - {{ site.title }}{% else %}{{ site.title }}{% endif %}</title>
+  <style>
+    /* Basic Tufte-inspired styles */
+    html, body {
+      height: 100%;
+    }
+    
+    body {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 5%;
+      counter-reset: sidenote-counter;
+      font-family: Palatino, "Palatino Linotype", "Palatino LT STD", "Book Antiqua", Georgia, serif;
+      background-color: #fffff8;
+      color: #111;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    main {
+      max-width: 650px;
+      position: relative;
+      padding-right: 150px;
+      flex: 1 0 auto;
+    }
+    
+    h1, h2, h3 {
+      font-weight: 400;
+      margin-top: 1.5rem;
+      margin-bottom: 1.5rem;
+      line-height: 1;
+    }
+    
+    h1 { font-size: 3rem; }
+    h2 { font-size: 2.2rem; }
+    h3 { font-size: 1.7rem; }
+    
+    /* Links */
+    a {
+      color: #111;
+      text-decoration: none;
+      border-bottom: 1px solid #777;
+      padding-bottom: 1px;
+    }
+    
+    a:hover {
+      color: #777;
+    }
+    
+    /* Paragraphs and spacing */
+    p, ol, ul {
+      font-size: 1.4rem;
+      line-height: 2rem;
+    }
+    
+    /* Header and Navigation */
+    header {
+      margin: 1.5rem 0 3rem;
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 0.8rem;
+    }
+    
+    .nav-main ul {
+      display: flex;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      align-items: baseline;
+    }
+    
+    .nav-main li {
+      margin-right: 2rem;
+    }
+    
+    .nav-main li a {
+      border-bottom: none;
+      font-size: 1.1rem;
+      color: #555;
+    }
+    
+    .nav-main li a:hover {
+      color: #111;
+      border-bottom: 1px solid #111;
+    }
+    
+    .nav-main li.logo {
+      margin-right: auto;
+    }
+    
+    .nav-main li.logo a {
+      font-style: italic;
+      font-size: 1.8rem;
+      font-weight: normal;
+      color: #333;
+      border-bottom: none;
+      line-height: 1;
+      display: block;
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    /* Sidenotes */
+    .sidenote, .marginnote {
+      float: right;
+      clear: right;
+      margin-right: -60%;
+      width: 50%;
+      margin-top: 0;
+      margin-bottom: 0;
+      font-size: 1.1rem;
+      line-height: 1.3;
+      vertical-align: baseline;
+      position: relative;
+      background-color: transparent;
+      padding: 0;
+      color: #555;
+    }
+    
+    .sidenote-number {
+      counter-increment: sidenote-counter;
+    }
+    
+    .sidenote-number:after {
+      content: counter(sidenote-counter);
+      font-size: 0.7rem;
+      top: -0.5rem;
+      left: 0.1rem;
+      position: relative;
+      vertical-align: baseline;
+      color: #777;
+    }
+    
+    .sidenote:before {
+      content: counter(sidenote-counter) ". ";
+      font-style: italic;
+      color: #777;
+      margin-right: 5px;
+    }
+    
+    /* Post styling */
+    .post-preview {
+      margin-bottom: 3rem;
+    }
+    
+    .post-preview h2 a {
+      border-bottom: none;
+    }
+    
+    .post-meta {
+      color: #777;
+      margin-top: -0.5rem;
+      font-size: 0.9rem;
+    }
+    
+    .post-tags {
+      margin-top: -0.7rem;
+      margin-bottom: 1.5rem;
+      font-size: 1rem;
+      color: #777;
+    }
+    
+    .post-tag {
+      font-size: 1rem;
+      font-style: italic;
+      color: #777;
+      text-decoration: none;
+      border-bottom: 1px solid #aaa;
+      background-color: transparent;
+      padding: 0;
+      transition: all 0.2s ease;
+    }
+    
+    .post-tag:hover {
+      color: #111;
+      border-bottom: 1px solid #111;
+    }
+    
+    /* Lists */
+    .post-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .post-list li {
+      margin-bottom: 0.7rem;
+    }
+    
+    /* Footer */
+    footer {
+      margin-top: 5rem;
+      padding-top: 1rem;
+      padding-bottom: 1rem;
+      border-top: 1px solid #e0e0e0;
+      color: #777;
+      font-size: 0.9rem;
+      text-align: right;
+    }
+    
+    footer a {
+      color: #555;
+      text-decoration: none;
+      border-bottom: none;
+      font-size: 1.1rem;
+    }
+    
+    footer a:hover {
+      color: #111;
+      border-bottom: 1px solid #111;
+    }
+    
+    footer .copyright {
+      font-size: 0.9rem;
+      color: #999;
+    }
+    
+    /* Tag Pages */
+    .tag-title-prefix {
+      font-weight: normal;
+      color: #777;
+    }
+    
+    .tag-name {
+      font-style: italic;
+    }
+    
+    
+    /* Tags Cloud */
+    .tags-cloud {
+      margin: 2rem 0;
+      line-height: 2.5;
+    }
+    
+    .tag-cloud-item {
+      display: inline-block;
+      margin-right: 1rem;
+      margin-bottom: 0.5rem;
+      font-style: italic;
+      color: #555;
+      border-bottom: none;
+    }
+    
+    .tag-cloud-item:hover {
+      color: #111;
+      border-bottom: 1px solid #111;
+    }
+    
+    .tag-cloud-item .tag-count {
+      font-size: 0.9rem;
+      color: #999;
+      margin: 0;
+    }
+    
+    .tag-section {
+      margin-bottom: 3rem;
+    }
+    
+    .tag-heading {
+      font-style: italic;
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 0.5rem;
+    }
+    
+    .post-date {
+      color: #777;
+      font-size: 0.9rem;
+      display: inline-block;
+      width: 5rem;
+      font-style: italic;
+    }
+    
+    /* Archive styling */
+    .archive-year {
+      font-style: italic;
+      font-size: 1.3rem;
+      font-weight: normal;
+      margin-top: 2.5rem;
+      margin-bottom: 1.2rem;
+      color: #555;
+      padding-bottom: 0.2rem;
+      border-bottom: none;
+    }
+    
+    .archive ul.post-list, 
+    .tag-posts ul.post-list {
+      list-style: none;
+      padding-left: 0;
+      margin-left: 0;
+    }
+    
+    .archive ul.post-list li, 
+    .tag-posts ul.post-list li {
+      margin-bottom: 0.7rem;
+      line-height: 1.5;
+    }
+    
+    .archive ul.post-list a, 
+    .tag-posts ul.post-list a {
+      font-size: 1.1rem;
+    }
+    
+    /* Profile image styling */
+    .profile-image {
+      display: block;
+      width: 100%;
+      height: auto;
+      margin: 0 0 2rem 0;
+    }
+    
+    /* Responsive */
+    @media (max-width: 1160px) {
+      body {
+        width: 84%;
+        padding-left: 8%;
+        padding-right: 8%;
+      }
+      
+      main {
+        width: 100%;
+        max-width: 700px;
+        margin: 0 auto;
+      }
+      
+      .sidenote, .marginnote {
+        float: none;
+        width: auto;
+        margin: 1rem 0;
+        padding: 0;
+        font-style: italic;
+        color: #555;
+        border-top: 1px dotted #ccc;
+        border-bottom: 1px dotted #ccc;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+        clear: both;
+        display: block;
+      }
+      
+      .sidenote:before {
+        position: relative;
+        left: 0;
+        top: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav class="nav-main">
+      <ul>
+        <li class="logo"><a href="{{ '/' | relative_url }}">{{ site.title }}</a></li>
+        <li><a href="{{ '/about/' | relative_url }}">About</a></li>
+        <li><a href="{{ '/archive/' | relative_url }}">Archive</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    {{ content }}
+  </main>
+
+  <footer>
+    <p>
+      <span class="copyright">&copy; {{ site.time | date: '%Y' }} {{ site.author.name }}</span>
+    </p>
+  </footer>
+</body>
+</html>

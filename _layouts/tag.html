@@ -1,0 +1,22 @@
+---
+layout: default
+---
+
+<article class="tag-page">
+  <h1><span class="tag-title-prefix">Posts tagged with </span><span class="tag-name">{{ page.tag }}</span></h1>
+  
+  <div class="tag-posts">
+    {% assign posts_by_year = site.tags[page.tag] | group_by_exp:"post", "post.date | date: '%Y'" %}
+    {% for year in posts_by_year %}
+      <h2 id="y{{ year.name }}" class="archive-year">{{ year.name }}</h2>
+      <ul class="post-list">
+        {% for post in year.items %}
+          <li>
+            <span class="post-date">{{ post.date | date: "%b %-d" }}</span>
+            <a href="{{ post.url | relative_url }}" class="post-link">{{ post.title }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endfor %}
+  </div>
+</article>
