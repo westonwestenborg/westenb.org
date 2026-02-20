@@ -4,7 +4,7 @@ title: About
 permalink: /about/
 ---
 
-![Weston Westenborg](/assets/images/profile.jpg){:class="profile-image"}
+![Weston Westenborg](/assets/images/profile.jpeg){:class="profile-image"}
 
 Hey, I'm **Weston Westenborg**—entrepreneur, builder, and lifelong learner. I co-founded [allUP](https://www.allup.world), a new professional social network. Before that, I helped start [Farmscape](https://farmscapegardens.com), an urban farming company, and worked in product at [Ritual](https://www.ritual.com) and Joymode.
 

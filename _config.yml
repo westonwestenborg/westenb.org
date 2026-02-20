@@ -33,6 +33,12 @@ defaults:
     values:
       layout: "default"
 
+exclude:
+  - ruby
+  - vendor
+  - Gemfile
+  - Gemfile.lock
+
 # Plugins
 plugins:
   - jekyll-paginate
