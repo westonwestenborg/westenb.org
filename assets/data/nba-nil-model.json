@@ -1,0 +1,84 @@
+{
+  "rookieScale": {
+    "1":  { "year1": 13825920, "total4yr": 62730225 },
+    "2":  { "year1": 12370320, "total4yr": 56140113 },
+    "3":  { "year1": 11108880, "total4yr": 50438478 },
+    "4":  { "year1": 10015680, "total4yr": 45487013 },
+    "5":  { "year1": 9069840,  "total4yr": 41209782 },
+    "6":  { "year1": 8237640,  "total4yr": 37439130 },
+    "7":  { "year1": 7520040,  "total4yr": 34193629 },
+    "8":  { "year1": 6889200,  "total4yr": 31340681 },
+    "9":  { "year1": 6332520,  "total4yr": 28822764 },
+    "10": { "year1": 6016080,  "total4yr": 27386799 },
+    "11": { "year1": 5715120,  "total4yr": 26345863 },
+    "12": { "year1": 5429520,  "total4yr": 25333943 },
+    "13": { "year1": 5157960,  "total4yr": 24355797 },
+    "14": { "year1": 4900320,  "total4yr": 23419858 },
+    "15": { "year1": 4655040,  "total4yr": 22512733 },
+    "16": { "year1": 4422360,  "total4yr": 21393587 },
+    "17": { "year1": 4201080,  "total4yr": 20331643 },
+    "18": { "year1": 3991320,  "total4yr": 19324472 },
+    "19": { "year1": 3811560,  "total4yr": 18463882 },
+    "20": { "year1": 3658800,  "total4yr": 17730606 },
+    "21": { "year1": 3512520,  "total4yr": 17220192 },
+    "22": { "year1": 3372240,  "total4yr": 16723991 },
+    "23": { "year1": 3237480,  "total4yr": 16240653 },
+    "24": { "year1": 3108120,  "total4yr": 15769801 },
+    "25": { "year1": 2983320,  "total4yr": 15308562 },
+    "26": { "year1": 2884560,  "total4yr": 14806815 },
+    "27": { "year1": 2801280,  "total4yr": 14384199 },
+    "28": { "year1": 2783880,  "total4yr": 14298145 },
+    "29": { "year1": 2763960,  "total4yr": 14194138 },
+    "30": { "year1": 2743800,  "total4yr": 14091596 }
+  },
+  "secondContract": {
+    "probability": [
+      { "range": "1-5",   "lo": 1,  "hi": 5,  "prob": 0.92 },
+      { "range": "6-10",  "lo": 6,  "hi": 10, "prob": 0.80 },
+      { "range": "11-14", "lo": 11, "hi": 14, "prob": 0.75 },
+      { "range": "15-20", "lo": 15, "hi": 20, "prob": 0.65 },
+      { "range": "21-25", "lo": 21, "hi": 25, "prob": 0.50 },
+      { "range": "26-30", "lo": 26, "hi": 30, "prob": 0.42 }
+    ],
+    "percentiles": [
+      { "range": "1-3",   "lo": 1,  "hi": 3,  "p10": 0,        "p25": 40000000,  "p50": 130000000, "p75": 215000000, "p90": 270000000, "years": 5 },
+      { "range": "4-7",   "lo": 4,  "hi": 7,  "p10": 0,        "p25": 25000000,  "p50": 80000000,  "p75": 150000000, "p90": 230000000, "years": 4 },
+      { "range": "8-14",  "lo": 8,  "hi": 14, "p10": 0,        "p25": 15000000,  "p50": 50000000,  "p75": 110000000, "p90": 180000000, "years": 4 },
+      { "range": "15-22", "lo": 15, "hi": 22, "p10": 0,        "p25": 8000000,   "p50": 35000000,  "p75": 75000000,  "p90": 140000000, "years": 4 },
+      { "range": "23-30", "lo": 23, "hi": 30, "p10": 0,        "p25": 3000000,   "p50": 20000000,  "p75": 55000000,  "p90": 120000000, "years": 4 }
+    ],
+    "descriptions": {
+      "1-3":   { "p10": "Bust", "p25": "Disappointing starter", "p50": "Good starter / borderline All-Star", "p75": "All-Star", "p90": "Superstar max" },
+      "4-7":   { "p10": "Bust", "p25": "Rotation player", "p50": "Solid starter", "p75": "All-Star caliber", "p90": "Star max" },
+      "8-14":  { "p10": "Out of league", "p25": "Bench player", "p50": "Rotation starter", "p75": "Quality starter", "p90": "All-Star" },
+      "15-22": { "p10": "Out of league", "p25": "End of bench", "p50": "Rotation player", "p75": "Solid starter", "p90": "Star" },
+      "23-30": { "p10": "Out of league", "p25": "Minimum / two-way", "p50": "Rotation player", "p75": "Quality role player", "p90": "Star" }
+    }
+  },
+  "teamOptionPickup": [
+    { "lo": 1,  "hi": 5,  "rate": 0.95 },
+    { "lo": 6,  "hi": 14, "rate": 0.90 },
+    { "lo": 15, "hi": 20, "rate": 0.85 },
+    { "lo": 21, "hi": 30, "rate": 0.80 }
+  ],
+  "costs": {
+    "nbaAgent": 0.04,
+    "nilAgent": 0.10,
+    "nbaTax": 0.37,
+    "nilTax": 0.345
+  },
+  "defaults": {
+    "causalAdj": 0.35,
+    "agePenalty": 0.03,
+    "injuryRisk": 0.05,
+    "discount": 0.05
+  },
+  "sources": {
+    "rookieScale": "Hoops Rumors, July 2025 (2025-26 at 120% of scale)",
+    "secondContractProb": "Hoops Rumors extension recaps 2019-2025",
+    "secondContractValues": "Hoops Rumors extension data 2023-2025",
+    "careerEarnings": "Samford University Sports Analytics (2020), 1990-2018 drafts",
+    "causalAdjustment": "Staw & Hoang (1995), author estimate: 30-40% causal",
+    "agePenalty": "Samford (6% raw, ~3% causal after selection effect)"
+  }
+}
