@@ -3,7 +3,7 @@ layout: post
 title: "Denial-of-Service Attack on the Applicant Tracking System"
 date: 2025-12-07
 tags: [hiring, ai, jobs]
-excerpt: "AI-written resumes meet auto-apply bots. Nobody wins."
+excerpt: "AI is destroying companies' hiring process."
 ---
 
 With the proliferation of ChatGPT, every smart job seeker is now using it to rewrite their resume and cover letter for each role they apply to, optimizing for keywords and mirroring company language.
