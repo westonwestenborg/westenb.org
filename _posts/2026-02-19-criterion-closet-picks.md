@@ -3,6 +3,7 @@ layout: post
 title: "Criterion Closet Picks"
 date: 2026-02-19
 tags: [criterion, film]
+excerpt: "A searchable database of every guest and every film from Criterion's Closet Picks series."
 ---
 
 Criterion has a video series called [Closet Picks](https://www.criterion.com/closet-picks) where filmmakers, actors, and directors visit the Criterion warehouse and pick their favorite films off the shelves. Each episode is a few minutes of someone you admire wandering through rows of spines, pulling titles, and explaining why they matter to them.
