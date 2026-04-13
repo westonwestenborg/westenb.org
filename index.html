@@ -11,7 +11,7 @@ title: Home
         <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%B %-d, %Y" }}</time>
       </p>
       <div class="post-excerpt">
-        {{ post.excerpt }}
+        <p>{{ post.excerpt | strip_html }}</p>
       </div>
     </article>
   {% endfor %}
