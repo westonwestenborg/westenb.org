@@ -4,28 +4,38 @@ module Jekyll
   class SideNoteTag < Liquid::Tag
     def initialize(tag_name, text, tokens)
       super
-      @text = text
+      @text = text.strip
     end
 
     def render(context)
-      @text =~ /(\S+)\s+(.*)/
-      id = $1
-      content = $2
+      @text =~ /(\S+)\s+(.*)/m
+      raw_id = $1
+      content = $2 || @text
 
-      # Enhanced sidenote that is more visible
-      "<sup class='sidenote-number'></sup><span class='sidenote'>#{content}</span>"
+      id = "sn-#{raw_id || SecureRandom.hex(4)}-#{SecureRandom.hex(3)}"
+
+      <<~HTML.gsub(/\n\s*/, '')
+        <label for="#{id}" class="margin-toggle sidenote-number"></label>
+        <input type="checkbox" id="#{id}" class="margin-toggle"/>
+        <span class="sidenote">#{content}</span>
+      HTML
     end
   end
 
   class MarginNoteTag < Liquid::Tag
     def initialize(tag_name, text, tokens)
       super
-      @text = text
+      @text = text.strip
     end
 
     def render(context)
-      # Enhanced marginnote that is more visible
-      "<span class='marginnote'>#{@text}</span>"
+      id = "mn-#{SecureRandom.hex(4)}"
+
+      <<~HTML.gsub(/\n\s*/, '')
+        <label for="#{id}" class="margin-toggle">&#8853;</label>
+        <input type="checkbox" id="#{id}" class="margin-toggle"/>
+        <span class="marginnote">#{@text}</span>
+      HTML
     end
   end
 end

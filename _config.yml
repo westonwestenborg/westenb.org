@@ -1,14 +1,13 @@
 title: westenb.org
+brand: Weston Westenborg
 description: Personal website and blog
 url: https://westenb.org
-author: 
+author:
   name: Weston Westenborg
 
 # Build settings
 markdown: kramdown
 permalink: /:year/:month/:day/:title/
-paginate: 15
-paginate_path: "/page:num/"
 
 # Collections
 collections:
@@ -36,10 +35,10 @@ defaults:
 exclude:
   - ruby
   - vendor
+  - docs
   - Gemfile
   - Gemfile.lock
 
 # Plugins
 plugins:
-  - jekyll-paginate
   - jekyll-feed

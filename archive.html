@@ -4,21 +4,20 @@ title: Archive
 permalink: /archive/
 ---
 
-<article class="archive-page">
+<section class="dense-page">
   <h1>Archive</h1>
-  
-  <div class="archive">
+
+  <div class="dense-list">
     {% assign posts_by_year = site.posts | group_by_exp:"post", "post.date | date: '%Y'" %}
     {% for year in posts_by_year %}
-      <h2 id="y{{ year.name }}" class="archive-year">{{ year.name }}</h2>
-      <ul class="post-list">
-        {% for post in year.items %}
-          <li>
-            <span class="post-date">{{ post.date | date: "%b %-d" }}</span>
-            <a href="{{ post.url | relative_url }}" class="post-link">{{ post.title }}</a>
-          </li>
-        {% endfor %}
-      </ul>
+      <div class="year-header">{{ year.name }}</div>
+      {% for post in year.items %}
+        <a class="dense-row" href="{{ post.url | relative_url }}">
+          <span class="d">{{ post.date | date: "%m · %d" }}</span>
+          <span class="t">{{ post.title }}</span>
+          <span class="k">{{ post.kind | default: "Post" }}</span>
+        </a>
+      {% endfor %}
     {% endfor %}
   </div>
-</article>
+</section>

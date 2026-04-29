@@ -1,22 +1,24 @@
 ---
 layout: default
 ---
-<article class="post">
-  <h1>{{ page.title }}</h1>
-  
-  {% if page.tags.size > 0 %}
-    <p class="post-tags">
-      {% for tag in page.tags %}
-        <a href="{{ '/tags/' | relative_url }}{{ tag | slugify }}/" class="post-tag">{{ tag }}</a>{% unless forloop.last %}, {% endunless %}
-      {% endfor %}
-    </p>
-  {% endif %}
-  
-  <p class="post-meta">
-    <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%B %-d, %Y" }}</time>
+<article class="post post-{{ page.slug }}">
+  <p class="kicker">
+    <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%Y · %m · %d" }}</time>
+    <span class="sep"> · </span>
+    <span class="kind">{{ page.kind | default: "Post" }}</span>
   </p>
 
-  <div class="post-content">
+  <h1>{{ page.title }}</h1>
+
+  <section class="post-content">
     {{ content }}
-  </div>
+  </section>
+
+  {% if page.tags.size > 0 %}
+    <p class="post-tags">Posted in
+      {% for tag in page.tags %}<a href="{{ '/tags/' | relative_url }}{{ tag | slugify }}/">{{ tag }}</a>{% unless forloop.last %}, {% endunless %}{% endfor %}
+    </p>
+  {% endif %}
+
+  <p class="back"><a href="{{ '/archive/' | relative_url }}">← Archive</a></p>
 </article>

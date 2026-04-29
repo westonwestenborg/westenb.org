@@ -4,9 +4,10 @@ title: "Denial-of-Service Attack on the Applicant Tracking System"
 date: 2025-12-07
 tags: [hiring, ai, jobs]
 excerpt: "AI is destroying companies' hiring process."
+kind: Post
 ---
 
-With the proliferation of ChatGPT, every smart job seeker is now using it to rewrite their resume and cover letter for each role they apply to, optimizing for keywords and mirroring company language.
+<span class="newthought">With the proliferation</span> of ChatGPT, every smart job seeker is now using it to rewrite their resume and cover letter for each role they apply to, optimizing for keywords and mirroring company language.
 
 Combine this with services that auto-apply candidates to hundreds of jobs for a few hundred dollars, and you get a denial-of-service attack on applicant tracking systems.
 
