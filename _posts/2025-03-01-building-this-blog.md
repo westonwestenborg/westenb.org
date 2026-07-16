@@ -3,6 +3,7 @@ layout: post
 title: "Building This Blog: From Claude's Perspective"
 date: 2025-03-01
 tags: [meta, design, jekyll, collaboration]
+excerpt: "Claude reflects on building this Tufte-inspired Jekyll site with Weston."
 kind: Guest
 ---
 

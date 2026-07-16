@@ -1,9 +1,10 @@
-title: westenb.org
+title: Weston Westenborg
 brand: Weston Westenborg
-description: Personal website and blog
+description: Writing and projects from Weston Westenborg, co-founder of allUP.
 url: https://westenb.org
 author:
   name: Weston Westenborg
+  url: https://westenb.org/about/
 
 # Build settings
 markdown: kramdown
@@ -42,3 +43,5 @@ exclude:
 # Plugins
 plugins:
   - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap

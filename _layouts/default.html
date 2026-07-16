@@ -3,7 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% if page.title %}{{ page.title }} — {{ site.brand }}{% else %}{{ site.brand }}{% endif %}</title>
+  <title>{% if page.url == '/' %}{{ site.brand }}{% elsif page.title %}{{ page.title }} — {{ site.brand }}{% else %}{{ site.brand }}{% endif %}</title>
+  {% seo title=false %}
+  {% if page.noindex %}<meta name="robots" content="noindex, follow">{% endif %}
   <link rel="alternate" type="application/rss+xml" title="{{ site.brand }}" href="{{ '/feed.xml' | relative_url }}">
   <style>
     /* ─── fonts ───────────────────────────────────────────────────── */

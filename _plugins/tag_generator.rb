@@ -21,6 +21,7 @@ module Jekyll
       self.process(@name)
       self.read_yaml(File.join(base, '_layouts'), 'tag.html')
       self.data['title'] = "Tag: #{tag}"
+      self.data['description'] = "Writing by Weston Westenborg tagged #{tag}."
       self.data['tag'] = tag
     end
   end

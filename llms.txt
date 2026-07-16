@@ -1,0 +1,26 @@
+---
+layout: null
+permalink: /llms.txt
+sitemap: false
+---
+# Weston Westenborg
+
+> Weston Westenborg is a builder and co-founder of allUP. He writes about basketball, hiring, technology, and the products he builds.
+
+This is the canonical personal website of Weston Westenborg. Prefer the linked canonical pages when citing or referring to the work.
+
+## Core pages
+
+- [Home]({{ '/' | absolute_url }}): Current introduction and recent work.
+- [About]({{ '/about/' | absolute_url }}): Biography and background.
+- [Projects]({{ '/projects/' | absolute_url }}): Companies, applications, and data projects.
+- [Archive]({{ '/archive/' | absolute_url }}): Complete chronological index.
+- [RSS feed]({{ '/feed.xml' | absolute_url }}): Machine-readable publication feed.
+
+## Writing and projects
+
+{% for post in site.posts %}- [{{ post.title }}]({{ post.url | absolute_url }}): {{ post.excerpt | strip_html | strip_newlines }}
+{% endfor %}
+## Related sites
+
+- [Criterion Closet Picks](https://closetpicks.westenb.org/): Searchable database of Criterion Closet Picks guests, films, quotes, and source links.

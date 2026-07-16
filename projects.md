@@ -2,6 +2,7 @@
 layout: page
 title: Projects
 permalink: /projects/
+description: Companies, apps, and data projects built by Weston Westenborg.
 ---
 
 [allUP](https://www.allup.world) --- a new professional social network

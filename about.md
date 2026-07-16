@@ -2,6 +2,12 @@
 layout: page
 title: About
 permalink: /about/
+description: About Weston Westenborg, entrepreneur, builder, and co-founder of allUP.
+seo:
+  name: Weston Westenborg
+  type: Person
+  links:
+    - https://github.com/westonwestenborg
 ---
 
 ![Weston Westenborg](/assets/images/profile.jpeg){:class="profile-image"}
