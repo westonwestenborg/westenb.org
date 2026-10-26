@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# SEO gate for the built site. CI runs it on every pull request and before
-# every deploy; run it locally the same way:
+# SEO gate for the built site (rules: docs/SEO.md). CI runs it on every pull
+# request and before every deploy; run it locally the same way:
 #
 #   bundle exec jekyll build && bundle exec ruby script/seo-check
 #
@@ -209,4 +209,5 @@ $warnings.each { |w| emit("warning", w) }
 $failures.each { |f| emit("error", f) }
 puts "seo-check: #{sitemap.size} sitemap URLs, #{built.size} built HTML pages, " \
      "#{$failures.size} failures, #{$warnings.size} warnings"
+puts "Rules and how to fix each failure: docs/SEO.md" unless $failures.empty?
 exit($failures.empty? ? 0 : 1)
