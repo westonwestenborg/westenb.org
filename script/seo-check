@@ -1,0 +1,212 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# SEO gate for the built site. CI runs it on every pull request and before
+# every deploy; run it locally the same way:
+#
+#   bundle exec jekyll build && bundle exec ruby script/seo-check
+#
+# Fails when a page in the sitemap is missing its <title>, meta description,
+# canonical link or og:title, when two sitemap pages share a <title>, when an
+# indexable built page is missing from the sitemap, or when a noindex page is
+# in it. Two pages sharing a meta description also fails, because a page with
+# no `description:` falls back to the site's. It also checks one <h1> per
+# page, alt text on images, BlogPosting JSON-LD and <lastmod> on posts, an
+# explicit excerpt on every post, robots.txt, and the IndexNow key file.
+
+require "cgi"
+require "date"
+require "json"
+require "rexml/document"
+require "time"
+require "uri"
+require "yaml"
+
+ROOT = File.expand_path("..", __dir__)
+SITE = File.expand_path(ARGV[0] || File.join(ROOT, "_site"))
+CONFIG = YAML.safe_load(File.read(File.join(ROOT, "_config.yml")), permitted_classes: [Date, Time])
+BASE = CONFIG.fetch("url").chomp("/")
+IN_ACTIONS = ENV["GITHUB_ACTIONS"] == "true"
+
+$failures = []
+$warnings = []
+
+def fail!(where, message)
+  $failures << "#{where}: #{message}"
+end
+
+def warn!(where, message)
+  $warnings << "#{where}: #{message}"
+end
+
+def attrs(source)
+  source.scan(/([^\s=\/]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/).to_h do |name, *values|
+    [name.downcase, CGI.unescapeHTML(values.compact.first.to_s)]
+  end
+end
+
+def tags(html, name)
+  html.scan(/<#{name}\b([^>]*)>/i).map { |(source)| attrs(source) }
+end
+
+# Everything a crawler reads from one built HTML file.
+def inspect_page(file)
+  html = File.read(file)
+  json_ld = html.scan(%r{<script[^>]*application/ld\+json[^>]*>(.*?)</script>}mi).flat_map do |(body)|
+    parsed = JSON.parse(body)
+    parsed.is_a?(Array) ? parsed : [parsed]
+  rescue JSON::ParserError
+    [{ "@invalid" => true }]
+  end
+  visible = html.gsub(/<!--.*?-->/m, "").gsub(%r{<(script|style)\b.*?</\1>}mi, "")
+  metas = tags(visible, "meta")
+  meta = ->(key) { metas.find { |m| m["name"] == key || m["property"] == key }&.fetch("content", nil) }
+  robots = metas.select { |m| %w[robots googlebot].include?(m["name"]) }.map { |m| m["content"].to_s.downcase }
+
+  {
+    title: CGI.unescapeHTML(visible[%r{<title[^>]*>(.*?)</title>}mi, 1].to_s).strip,
+    description: meta.call("description").to_s.strip,
+    og_title: meta.call("og:title").to_s.strip,
+    og_type: meta.call("og:type"),
+    canonical: tags(visible, "link").find { |l| l["rel"].to_s.split.include?("canonical") }&.fetch("href", nil),
+    noindex: robots.any? { |c| c.include?("noindex") || c.include?("none") },
+    h1_count: visible.scan(/<h1\b/i).size,
+    imgs_without_alt: tags(visible, "img").reject { |i| i.key?("alt") }.map { |i| i["src"] },
+    json_ld: json_ld
+  }
+end
+
+def url_for_file(file)
+  rel = file.delete_prefix(SITE)
+  BASE + rel.sub(%r{(\A|/)index\.html\z}, "\\1")
+end
+
+def file_for_url(url)
+  path = URI(url).path
+  path = "#{path}index.html" if path.end_with?("/")
+  File.join(SITE, path)
+end
+
+def emit(level, line)
+  if IN_ACTIONS
+    puts "::#{level} title=SEO check::#{line.gsub('%', '%25').gsub("\r", '%0D').gsub("\n", '%0A')}"
+  else
+    puts "#{level == 'error' ? 'FAIL' : 'WARN'}  #{line}"
+  end
+end
+
+abort "seo-check: #{SITE} not found; run `bundle exec jekyll build` first" unless Dir.exist?(SITE)
+
+# --- sitemap ---------------------------------------------------------------
+
+sitemap = {}
+begin
+  doc = REXML::Document.new(File.read(File.join(SITE, "sitemap.xml")))
+  REXML::XPath.each(doc, "//*[local-name()='url']") do |node|
+    loc = REXML::XPath.first(node, "*[local-name()='loc']")&.text.to_s.strip
+    lastmod = REXML::XPath.first(node, "*[local-name()='lastmod']")&.text&.strip
+    fail!(loc, "listed twice in sitemap.xml") if sitemap.key?(loc)
+    sitemap[loc] = lastmod
+  end
+rescue Errno::ENOENT, REXML::ParseException => e
+  fail!("sitemap.xml", "missing or unreadable (#{e.class})")
+end
+
+robots_txt = File.exist?(File.join(SITE, "robots.txt")) ? File.read(File.join(SITE, "robots.txt")) : ""
+unless robots_txt.match?(/^Sitemap:\s*#{Regexp.escape(BASE)}\/sitemap\.xml\s*$/i)
+  fail!("robots.txt", "must contain `Sitemap: #{BASE}/sitemap.xml`")
+end
+
+# --- every page in the sitemap ----------------------------------------------
+
+titles = Hash.new { |h, k| h[k] = [] }
+descriptions = Hash.new { |h, k| h[k] = [] }
+
+sitemap.each do |url, lastmod|
+  unless url.start_with?("#{BASE}/")
+    fail!(url, "sitemap URL is not on #{BASE}")
+    next
+  end
+  file = file_for_url(url)
+  unless File.file?(file)
+    fail!(url, "in sitemap.xml but no built page at #{file.delete_prefix("#{SITE}/")}")
+    next
+  end
+
+  page = inspect_page(file)
+  fail!(url, "missing <title>") if page[:title].empty?
+  fail!(url, "missing meta description") if page[:description].empty?
+  fail!(url, "missing og:title") if page[:og_title].empty?
+  if page[:canonical].nil?
+    fail!(url, "missing canonical link")
+  elsif page[:canonical] != url
+    fail!(url, "canonical is #{page[:canonical]}, expected the sitemap URL")
+  end
+  fail!(url, "has noindex but is in sitemap.xml") if page[:noindex]
+  fail!(url, "has #{page[:h1_count]} <h1> elements, expected 1") unless page[:h1_count] == 1
+  page[:imgs_without_alt].each { |src| fail!(url, "<img src=\"#{src}\"> has no alt attribute") }
+  warn!(url, "meta description is #{page[:description].length} characters; search results cut off around 160") if page[:description].length > 160
+
+  if page[:og_type] == "article"
+    fail!(url, "post has no <lastmod> in sitemap.xml") if lastmod.to_s.empty?
+    posting = page[:json_ld].find { |n| n["@type"] == "BlogPosting" }
+    if posting.nil?
+      fail!(url, "post has no BlogPosting JSON-LD")
+    else
+      %w[headline datePublished author].each { |k| fail!(url, "BlogPosting JSON-LD missing #{k}") if posting[k].to_s.empty? }
+    end
+  end
+  fail!(url, "invalid JSON-LD") if page[:json_ld].any? { |n| n["@invalid"] }
+
+  titles[page[:title]] << url unless page[:title].empty?
+  descriptions[page[:description]] << url unless page[:description].empty?
+end
+
+titles.each { |title, urls| fail!(urls.join(", "), "share the <title> \"#{title}\"") if urls.size > 1 }
+# A page without its own `description:` silently inherits the site description,
+# so a duplicate is how a missing description shows up in the built HTML.
+descriptions.each do |_, urls|
+  fail!(urls.join(", "), "share a meta description (give each page its own `description:`)") if urls.size > 1
+end
+
+# --- built pages that should be in the sitemap -----------------------------
+
+built = Dir.glob(File.join(SITE, "**", "*.html")).sort
+built.each do |file|
+  url = url_for_file(file)
+  next if sitemap.key?(url)
+  next if inspect_page(file)[:noindex]
+  fail!(url, "indexable page is missing from sitemap.xml (add it, or set `noindex: true` and `sitemap: false`)")
+end
+
+# --- source: posts need a hand-written description ---------------------------
+
+Dir.glob(File.join(ROOT, "_posts", "**", "*.{md,markdown,html}")).sort.each do |path|
+  front = File.read(path)[/\A---\s*\n(.*?)\n---\s*$/m, 1]
+  data = front ? YAML.safe_load(front, permitted_classes: [Date, Time]) || {} : {}
+  next if data["published"] == false
+  rel = path.delete_prefix("#{ROOT}/")
+  if data["excerpt"].to_s.strip.empty? && data["description"].to_s.strip.empty?
+    fail!(rel, "post needs an `excerpt:` in front matter (it becomes the meta description)")
+  end
+end
+
+# --- IndexNow key file -------------------------------------------------------
+
+keys = Dir.glob(File.join(SITE, "*.txt")).select do |file|
+  stem = File.basename(file, ".txt")
+  stem.match?(/\A[A-Za-z0-9-]{8,128}\z/) && File.read(file).strip == stem
+end
+case keys.size
+when 0 then fail!("IndexNow", "no key file at the site root (a <key>.txt whose content is the key)")
+when 1 then nil
+else fail!("IndexNow", "more than one key file at the site root: #{keys.map { |k| File.basename(k) }.join(', ')}")
+end
+
+# --- report -----------------------------------------------------------------
+
+$warnings.each { |w| emit("warning", w) }
+$failures.each { |f| emit("error", f) }
+puts "seo-check: #{sitemap.size} sitemap URLs, #{built.size} built HTML pages, " \
+     "#{$failures.size} failures, #{$warnings.size} warnings"
+exit($failures.empty? ? 0 : 1)

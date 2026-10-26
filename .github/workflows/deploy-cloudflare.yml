@@ -3,20 +3,26 @@ name: Deploy to Cloudflare Pages
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
 
-concurrency:
-  group: cf-pages
-  cancel-in-progress: true
-
 jobs:
-  deploy:
+  build:
+    name: Build and SEO check
     runs-on: ubuntu-latest
+    concurrency:
+      group: build-${{ github.ref }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history: _plugins/last_modified_at.rb reads each file's last
+          # commit date for the sitemap's <lastmod>.
+          fetch-depth: 0
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -27,9 +33,52 @@ jobs:
       - name: Build Jekyll site
         run: bundle exec jekyll build
 
+      - name: SEO check
+        run: bundle exec ruby script/seo-check
+
+      - name: Upload built site
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: _site
+          retention-days: 7
+
+  deploy:
+    name: Deploy
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    # Queue deploys instead of cancelling one mid-run, so every deploy finishes
+    # its IndexNow submission before the next one snapshots the live sitemap.
+    concurrency:
+      group: cf-pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+
+      - name: Download built site
+        uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: _site
+
+      - name: Snapshot live sitemap for IndexNow
+        continue-on-error: true
+        run: ruby script/indexnow snapshot _site .indexnow
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy _site --project-name=westenb-org --branch=main
+
+      - name: Submit new and changed URLs to IndexNow
+        continue-on-error: true
+        run: ruby script/indexnow submit _site .indexnow

@@ -19,3 +19,6 @@ Thumbs.db
 CLAUDE.md
 .gstack/
 AGENTS.md
+
+# IndexNow dry-run state (script/indexnow)
+.indexnow/

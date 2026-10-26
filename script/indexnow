@@ -1,0 +1,173 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Tells IndexNow (Bing, Yandex, Naver, Seznam, Yep, Amazon) which URLs a deploy
+# added or changed. The deploy job runs it in two steps:
+#
+#   ruby script/indexnow snapshot _site .indexnow   # before deploying
+#   ruby script/indexnow submit _site .indexnow     # after deploying
+#
+# `snapshot` saves the sitemap that is live before the deploy. `submit`
+# compares it with the freshly built _site/sitemap.xml and POSTs, in one
+# request, every URL that is new or whose <lastmod> changed. If the key file
+# was not live before the deploy, this is the first IndexNow deploy and every
+# sitemap URL is submitted. Add --dry-run to `submit` to print the request
+# instead of sending it.
+#
+# Every failure is a warning: this script always exits 0 so it can never fail
+# a deploy.
+
+require "date"
+require "fileutils"
+require "json"
+require "net/http"
+require "rexml/document"
+require "time"
+require "uri"
+require "yaml"
+
+ROOT = File.expand_path("..", __dir__)
+CONFIG = YAML.safe_load(File.read(File.join(ROOT, "_config.yml")), permitted_classes: [Date, Time])
+BASE = CONFIG.fetch("url").chomp("/")
+ENDPOINT = URI("https://api.indexnow.org/indexnow")
+IN_ACTIONS = ENV["GITHUB_ACTIONS"] == "true"
+
+def notice(message)
+  puts IN_ACTIONS ? "::notice title=IndexNow::#{annotation(message)}" : "IndexNow: #{message}"
+end
+
+def warning(message)
+  puts IN_ACTIONS ? "::warning title=IndexNow::#{annotation(message)}" : "IndexNow warning: #{message}"
+end
+
+# GitHub workflow commands end at the first newline unless it is escaped.
+def annotation(message)
+  message.gsub("%", "%25").gsub("\r", "%0D").gsub("\n", "%0A")
+end
+
+def summary(lines)
+  return unless ENV["GITHUB_STEP_SUMMARY"]
+  File.write(ENV["GITHUB_STEP_SUMMARY"], "### IndexNow\n\n#{lines.join("\n")}\n\n", mode: "a")
+end
+
+# The key file is a <key>.txt at the site root whose only content is the key.
+def find_key(site_dir)
+  keys = Dir.glob(File.join(site_dir, "*.txt")).map { |f| File.basename(f, ".txt") }.select do |stem|
+    stem.match?(/\A[A-Za-z0-9-]{8,128}\z/) && File.read(File.join(site_dir, "#{stem}.txt")).strip == stem
+  end
+  raise "expected one IndexNow key file in #{site_dir}, found #{keys.size}" unless keys.size == 1
+  keys.first
+end
+
+def get(url)
+  uri = URI(url)
+  Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https", open_timeout: 10, read_timeout: 20) do |http|
+    http.request(Net::HTTP::Get.new(uri, "Cache-Control" => "no-cache"))
+  end
+end
+
+# { loc => lastmod } from sitemap XML.
+def parse_sitemap(xml)
+  doc = REXML::Document.new(xml)
+  REXML::XPath.match(doc, "//*[local-name()='url']").to_h do |node|
+    [REXML::XPath.first(node, "*[local-name()='loc']").text.strip,
+     REXML::XPath.first(node, "*[local-name()='lastmod']")&.text&.strip]
+  end
+end
+
+def same_lastmod?(a, b)
+  return a == b if a.nil? || b.nil?
+  Time.iso8601(a) == Time.iso8601(b)
+rescue ArgumentError
+  a == b
+end
+
+def snapshot(site_dir, state_dir)
+  FileUtils.mkdir_p(state_dir)
+  state = File.join(state_dir, "state")
+  key = find_key(site_dir)
+
+  key_res = get("#{BASE}/#{key}.txt")
+  if key_res.code == "404"
+    File.write(state, "first-run")
+    notice("key file is not live yet; this deploy will submit every sitemap URL")
+    return
+  end
+  unless key_res.code == "200" && key_res.body.to_s.strip == key
+    raise "could not check the live key file (HTTP #{key_res.code})"
+  end
+
+  sitemap_res = get("#{BASE}/sitemap.xml")
+  raise "could not fetch the live sitemap (HTTP #{sitemap_res.code})" unless sitemap_res.code == "200"
+  parse_sitemap(sitemap_res.body) # fail now, not after the deploy, if it is unreadable
+  File.write(File.join(state_dir, "before.xml"), sitemap_res.body)
+  File.write(state, "diff")
+  notice("saved the live sitemap for comparison after the deploy")
+rescue StandardError => e
+  File.write(state, "unavailable") if state
+  warning("snapshot failed, so this deploy will not submit to IndexNow: #{e.message}")
+end
+
+def submit(site_dir, state_dir, dry_run:)
+  state_file = File.join(state_dir, "state")
+  state = File.exist?(state_file) ? File.read(state_file).strip : "unavailable"
+  if state == "unavailable"
+    warning("no usable snapshot of the pre-deploy sitemap; skipping submission")
+    summary(["Skipped: no usable snapshot of the pre-deploy sitemap."])
+    return
+  end
+
+  after = parse_sitemap(File.read(File.join(site_dir, "sitemap.xml")))
+  before = state == "diff" ? parse_sitemap(File.read(File.join(state_dir, "before.xml"))) : {}
+  urls = after.reject { |loc, lastmod| before.key?(loc) && same_lastmod?(before[loc], lastmod) }.keys
+  host = URI(BASE).host
+  urls.select! { |u| URI(u).host == host }
+
+  if urls.empty?
+    notice("no new or changed URLs in the sitemap; nothing to submit")
+    summary(["No new or changed URLs."])
+    return
+  end
+
+  key = find_key(site_dir)
+  payload = { host: host, key: key, keyLocation: "#{BASE}/#{key}.txt", urlList: urls.first(10_000) }
+  puts "#{state == 'first-run' ? 'First IndexNow deploy' : 'New or changed'}: #{urls.size} URL(s)"
+  urls.each { |u| puts "  #{u}" }
+
+  if dry_run
+    puts JSON.pretty_generate(payload)
+    return
+  end
+
+  # Search engines fetch the key file to verify the request, so wait until
+  # the new deployment is serving it.
+  live = 12.times.any? do |attempt|
+    sleep 5 unless attempt.zero?
+    res = get(payload[:keyLocation]) rescue nil
+    res&.code == "200" && res.body.to_s.strip == key
+  end
+  raise "key file is not live at #{payload[:keyLocation]} after 60 seconds" unless live
+
+  res = Net::HTTP.start(ENDPOINT.host, ENDPOINT.port, use_ssl: ENDPOINT.scheme == "https", open_timeout: 10, read_timeout: 30) do |http|
+    req = Net::HTTP::Post.new(ENDPOINT, "Content-Type" => "application/json; charset=utf-8")
+    req.body = JSON.generate(payload)
+    http.request(req)
+  end
+  if %w[200 202].include?(res.code)
+    notice("submitted #{payload[:urlList].size} URL(s), HTTP #{res.code}")
+    summary(["Submitted #{payload[:urlList].size} URL(s) (HTTP #{res.code}):", "", *payload[:urlList].map { |u| "- #{u}" }])
+  else
+    raise "HTTP #{res.code} from #{ENDPOINT}: #{res.body.to_s.gsub(/\s+/, ' ').strip[0, 300]}"
+  end
+rescue StandardError => e
+  warning("submission failed; the sitemap is still the fallback: #{e.message}")
+  summary(["Failed: #{e.message}"])
+end
+
+command, site_dir, state_dir = ARGV.reject { |a| a.start_with?("--") }
+case command
+when "snapshot" then snapshot(site_dir || "_site", state_dir || ".indexnow")
+when "submit" then submit(site_dir || "_site", state_dir || ".indexnow", dry_run: ARGV.include?("--dry-run"))
+else warning("usage: script/indexnow snapshot|submit [site_dir] [state_dir] [--dry-run]")
+end
+exit 0
