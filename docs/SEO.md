@@ -12,8 +12,9 @@ The site is Jekyll 4.3 with three plugins:
 
 Don't hand-write any of these tags. Set front matter and let the plugins render them.
 
-Two local plugins also matter:
+Three local plugins also matter:
 
+- `_plugins/og_images.rb` gives every page a 1200x630 preview image (see Preview images).
 - `_plugins/tag_generator.rb` builds a page at `/tags/{slug}/` for every tag. Tags with fewer than `tag_index_min_posts` posts get `noindex` and `sitemap: false` (see Tag pages).
 - `_plugins/last_modified_at.rb` sets each page's `last_modified_at` from git history (see Sitemap `<lastmod>`).
 
@@ -29,6 +30,35 @@ Two local plugins also matter:
 ## Tag pages
 
 A tag page with fewer than `tag_index_min_posts` posts (3, set in `_config.yml`) is `noindex, follow` and left out of the sitemap. A tag page with one or two posts is a heading and a link or two, which is thin content. The posts don't need it to be found: every post is linked from the home page or the archive. Once a tag reaches 3 posts, its page becomes indexable and enters the sitemap with no further change. The `/tags/` index stays indexed.
+
+## Preview images
+
+Every page has a 1200x630 Open Graph preview image, the picture a link shows when it is shared in Slack, iMessage, LinkedIn or X. `_plugins/og_images.rb` makes them during `jekyll build`:
+
+- **Each post** gets its own card at `/assets/og/{post file name}.png`, for example `/assets/og/2026-04-11-koa-peat.png`. It shows the site masthead, the post's kicker (`2026 · 04 · 11 · POST`, as on the post page), the title, and the excerpt when it fits. A long title shrinks to stay within three lines. The excerpt appears only if it fits in two lines; the title may shrink to 72px to make room, and otherwise the excerpt is left off.
+- **Every other page** (home, about, archive, projects, tags) shares the site card at `/assets/og/site.png`: the name and the `og_card.site_subtitle` line from `_config.yml`.
+
+The plugin sets `image:` on each page, and `jekyll-seo-tag` turns that into `og:image`, `og:image:width`, `og:image:height`, `og:image:alt`, `twitter:image` and a `summary_large_image` Twitter card. Don't add these tags by hand. A page that sets its own `image:` in front matter keeps it, but the image must be exactly 1200x630 with `width`, `height` and `alt`:
+
+```yaml
+image:
+  path: /assets/images/example-1200x630.png
+  width: 1200
+  height: 630
+  alt: What the image shows
+```
+
+The card design lives in `_includes/og-card.html`: plain HTML and CSS with the site's design tokens and fonts (ETBook, JetBrains Mono). Edit it like any page. After the site is written, the plugin renders each card with headless Chrome into `_site/assets/og/`. Renders are cached in `.jekyll-cache/og-images/`, keyed on each card's HTML, so only changed cards are rendered again.
+
+Chrome is the only requirement, and no Node is involved. The plugin looks for `google-chrome`, `google-chrome-stable`, `chromium` or `chromium-browser` on `PATH`, then `/Applications/Google Chrome.app`; set `CHROME_PATH` to use another one. GitHub's Ubuntu runners have Chrome installed. Without Chrome the build still finishes, with a warning, and the SEO check then fails on the missing images.
+
+To preview the cards locally:
+
+```bash
+bundle exec jekyll build && open _site/assets/og/
+```
+
+`bundle exec jekyll serve` renders them too, at `http://localhost:4000/assets/og/site.png` and so on.
 
 ## Sitemap `<lastmod>`
 
@@ -56,6 +86,7 @@ CI checks out full history (`fetch-depth: 0` in the workflow). On a shallow clon
 - an indexable built page is missing from the sitemap, or a `noindex` page is in it;
 - a sitemap page has zero or several `<h1>` elements, or an `<img>` without `alt`;
 - a post lacks a `<lastmod>`, BlogPosting JSON-LD (headline, datePublished, author), or an `excerpt:`;
+- a sitemap page has no `og:image`, the image file is missing from `_site`, it isn't exactly 1200x630 (PNG or JPEG), `og:image:width`/`height`/`alt` are missing or wrong, or `twitter:card` isn't `summary_large_image`;
 - `robots.txt` doesn't point at the sitemap, or the IndexNow key file is missing.
 
 Run it locally before opening a pull request:

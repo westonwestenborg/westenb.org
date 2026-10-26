@@ -13,6 +13,8 @@
 # no `description:` falls back to the site's. It also checks one <h1> per
 # page, alt text on images, BlogPosting JSON-LD and <lastmod> on posts, an
 # explicit excerpt on every post, robots.txt, and the IndexNow key file.
+# Every sitemap page needs an og:image that exists in _site and is 1200x630,
+# with og:image:width/height/alt and a summary_large_image Twitter card.
 
 require "cgi"
 require "date"
@@ -21,6 +23,8 @@ require "rexml/document"
 require "time"
 require "uri"
 require "yaml"
+
+OG_IMAGE_SIZE = [1200, 630].freeze
 
 ROOT = File.expand_path("..", __dir__)
 SITE = File.expand_path(ARGV[0] || File.join(ROOT, "_site"))
@@ -68,6 +72,10 @@ def inspect_page(file)
     description: meta.call("description").to_s.strip,
     og_title: meta.call("og:title").to_s.strip,
     og_type: meta.call("og:type"),
+    og_image: meta.call("og:image"),
+    og_image_size: [meta.call("og:image:width"), meta.call("og:image:height")].map(&:to_i),
+    og_image_alt: meta.call("og:image:alt").to_s.strip,
+    twitter_card: meta.call("twitter:card"),
     canonical: tags(visible, "link").find { |l| l["rel"].to_s.split.include?("canonical") }&.fetch("href", nil),
     noindex: robots.any? { |c| c.include?("noindex") || c.include?("none") },
     h1_count: visible.scan(/<h1\b/i).size,
@@ -85,6 +93,21 @@ def file_for_url(url)
   path = URI(url).path
   path = "#{path}index.html" if path.end_with?("/")
   File.join(SITE, path)
+end
+
+# [width, height] of a PNG or JPEG, or nil for anything else.
+def image_size(file)
+  data = File.binread(file)
+  if data.start_with?("\x89PNG\r\n\x1A\n".b)
+    data[16, 8].unpack("NN")
+  elsif data.start_with?("\xFF\xD8".b)
+    pos = 2
+    while pos + 9 < data.bytesize
+      marker, length = data[pos, 4].unpack("xCn")
+      return data[pos + 5, 4].unpack("nn").reverse if (0xC0..0xCF).cover?(marker) && ![0xC4, 0xC8, 0xCC].include?(marker)
+      pos += 2 + length
+    end
+  end
 end
 
 def emit(level, line)
@@ -145,6 +168,23 @@ sitemap.each do |url, lastmod|
   fail!(url, "has noindex but is in sitemap.xml") if page[:noindex]
   fail!(url, "has #{page[:h1_count]} <h1> elements, expected 1") unless page[:h1_count] == 1
   page[:imgs_without_alt].each { |src| fail!(url, "<img src=\"#{src}\"> has no alt attribute") }
+
+  if page[:og_image].to_s.empty?
+    fail!(url, "missing og:image (set by _plugins/og_images.rb, or `image:` in front matter)")
+  elsif !page[:og_image].start_with?("#{BASE}/")
+    fail!(url, "og:image #{page[:og_image]} is not on #{BASE}")
+  else
+    image_file = File.join(SITE, URI(page[:og_image]).path)
+    size = File.file?(image_file) && image_size(image_file)
+    if !File.file?(image_file)
+      fail!(url, "og:image file is missing from _site: #{image_file.delete_prefix("#{SITE}/")}")
+    elsif size != OG_IMAGE_SIZE
+      fail!(url, "og:image is #{size ? size.join('x') : 'not a PNG or JPEG'}, expected #{OG_IMAGE_SIZE.join('x')}")
+    end
+  end
+  fail!(url, "og:image:width/height should be #{OG_IMAGE_SIZE.join('/')}") if page[:og_image] && page[:og_image_size] != OG_IMAGE_SIZE
+  fail!(url, "missing og:image:alt") if page[:og_image] && page[:og_image_alt].empty?
+  fail!(url, "twitter:card is #{page[:twitter_card].inspect}, expected summary_large_image") unless page[:twitter_card] == "summary_large_image"
   warn!(url, "meta description is #{page[:description].length} characters; search results cut off around 160") if page[:description].length > 160
 
   if page[:og_type] == "article"

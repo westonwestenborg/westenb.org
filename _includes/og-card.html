@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!--
+  Open Graph preview card, 1200x630. Rendered to PNG by headless Chrome in
+  _plugins/og_images.rb; not part of the site. Colors and fonts are the
+  design tokens from _layouts/default.html.
+-->
+<style>
+  @font-face { font-family: "et-book"; src: url("{{ fonts.serif }}") format("woff"); font-weight: 400; font-style: normal; }
+  @font-face { font-family: "et-book"; src: url("{{ fonts.serif_italic }}") format("woff"); font-weight: 400; font-style: italic; }
+  @font-face { font-family: "JetBrains Mono"; src: url("{{ fonts.mono }}") format("woff2"); font-weight: 400; font-style: normal; }
+
+  :root {
+    --paper:    #fffff8;
+    --ink:      #111;
+    --ink-soft: #5b5750;
+    --rule:     #cfc8b8;
+    --accent:   #a8332b;
+    --serif:    "et-book", Palatino, Georgia, serif;
+    --mono:     "JetBrains Mono", ui-monospace, Menlo, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--serif);
+    padding: 56px 80px 60px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .masthead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1.5px solid var(--ink);
+    padding-bottom: 18px;
+  }
+  .brand { font-size: 38px; }
+  .domain {
+    font-family: var(--mono);
+    font-size: 20px;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+  }
+
+  .main {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    overflow: hidden;
+  }
+  .kicker {
+    font-family: var(--mono);
+    font-size: 22px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 22px;
+  }
+  .title {
+    font-size: 96px;
+    line-height: 1.04;
+    letter-spacing: -0.005em;
+    text-wrap: balance;
+  }
+  .site .title { font-size: 112px; }
+  .excerpt {
+    font-style: italic;
+    font-size: 38px;
+    line-height: 1.28;
+    color: var(--ink-soft);
+    margin-top: 26px;
+    max-width: 960px;
+    text-wrap: pretty;
+  }
+</style>
+</head>
+<body class="{{ card.variant }}">
+  <header class="masthead">
+    <span class="brand">{{ card.brand | escape }}</span>
+    <span class="domain">{{ card.domain | escape }}</span>
+  </header>
+  <main class="main">
+    {% if card.kicker %}<p class="kicker">{{ card.kicker | escape }}</p>{% endif %}
+    {%- comment -%} title and subtitle arrive HTML-escaped, with curly quotes {%- endcomment %}
+    <h1 class="title">{{ card.title }}</h1>
+    {% if card.subtitle %}<p class="excerpt">{{ card.subtitle }}</p>{% endif %}
+  </main>
+  <script>
+    // Keep the title to three lines, shrinking it if needed. Then show the
+    // excerpt if it fits in two lines, letting the title shrink to 72px to make
+    // room; otherwise drop the excerpt. The block is bottom-aligned, so too
+    // much content pushes the first line up toward the masthead rule.
+    function lines(el) {
+      return Math.round(el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight));
+    }
+    function crowded(main) {
+      return main.firstElementChild.getBoundingClientRect().top < main.getBoundingClientRect().top + 40;
+    }
+    function fit() {
+      var main = document.querySelector(".main");
+      var title = document.querySelector(".title");
+      var excerpt = document.querySelector(".excerpt");
+      if (excerpt) excerpt.style.display = "none";
+      var size = parseFloat(getComputedStyle(title).fontSize);
+      while ((lines(title) > 3 || crowded(main)) && size > 48) {
+        size -= 4;
+        title.style.fontSize = size + "px";
+      }
+      if (!excerpt) return;
+      var fitted = size;
+      excerpt.style.display = "";
+      while ((lines(excerpt) > 2 || crowded(main)) && size > 72) {
+        size -= 4;
+        title.style.fontSize = size + "px";
+      }
+      if (lines(excerpt) > 2 || crowded(main)) {
+        excerpt.remove();
+        title.style.fontSize = fitted + "px";
+      }
+    }
+    document.fonts.ready.then(fit);
+  </script>
+</body>
+</html>
