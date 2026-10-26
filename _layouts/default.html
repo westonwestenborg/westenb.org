@@ -497,6 +497,8 @@
       border-bottom: none;
     }
     .brand:hover { color: var(--ink); border-bottom: none; }
+    /* home page only: the brand is the page's h1 but must look like the plain link */
+    body > header.masthead h1.brand-h1 { font-size: inherit; line-height: inherit; margin: 0; }
     .nav-main { display: flex; gap: 1.4rem; }
     .nav-main a {
       font-family: var(--serif);
@@ -549,7 +551,7 @@
 </head>
 <body>
   <header class="masthead">
-    <a class="brand" href="{{ '/' | relative_url }}">{{ site.brand }}</a>
+    {% if page.url == '/' %}<h1 class="brand-h1"><a class="brand" href="{{ '/' | relative_url }}">{{ site.brand }}</a></h1>{% else %}<a class="brand" href="{{ '/' | relative_url }}">{{ site.brand }}</a>{% endif %}
     <nav class="nav-main">
       <a href="{{ '/' | relative_url }}"{% if page.url == '/' %} class="cur"{% endif %}>Home</a>
       <a href="{{ '/archive/' | relative_url }}"{% if page.url contains '/archive' %} class="cur"{% endif %}>Archive</a>
