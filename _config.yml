@@ -33,6 +33,12 @@ defaults:
     values:
       layout: "default"
 
+# Preview images (_plugins/og_images.rb): the domain printed on every card,
+# and the subtitle on the shared card for home, about, archive, projects, tags.
+og_card:
+  domain: westenb.org
+  site_subtitle: "Builder & co-founder of allUP. I write about basketball, hiring, technology, and whatever I'm building."
+
 # Tag pages with fewer posts than this are noindex and left out of the sitemap.
 tag_index_min_posts: 3
 
